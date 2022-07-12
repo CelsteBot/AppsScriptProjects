@@ -16,30 +16,27 @@ function findDuplicates(){
   }
 
   // create vars
-  var fn = sheet.getRange("B2:B").getValues();
-  var ln = sheet.getRange("D2:D").getValues();
-  var date = sheet.getRange("H2:H").getValues();
-  var number = sheet.getRange("AE2:AE").getValues();
-  var email = sheet.getRange("AF2:AF").getValues();
-
   var values = [];
   var compare = [];
 
+  var cyan = [];
   var green = [];
   var yellow = [];
   var orange = [];
   var red = [];
 
-  for (var i = 0; i < fn.length; i++)
+  for (var i = 0; i < sheet.getMaxRows(); i++)
   {
+    var range = sheet.getRange(i + 2, 1, 1, sheet.getMaxColumns()).getValues();
     values.push({
       "index": i + 2, 
-      "first": fn[i][0], 
-      "last": ln[i][0], 
-      "date": date[i][0], 
-      "number": number[i][0], 
-      "email": email[i][0], 
-      "rangeValues": sheet.getRange(i + 2, 1, 1, sheet.getMaxColumns()).getValues()});
+      "id": range[0][0],
+      "first": range[0][1], 
+      "last": range[0][3], 
+      "date": range[0][7], 
+      "number": range[0][30], 
+      "email": range[0][31], 
+      "rangeValues": range});
   }
 
   for (var i = 0; i < values.length; i++){
@@ -60,6 +57,12 @@ function findDuplicates(){
       }
       if (String(values[i]["email"]) == String(compare[x]["email"])){
         scale++;
+      }
+      if (String(values[i]["email"]) == String(compare[x]["email"])){
+        scale++;
+      }
+      if (String(values[i]["id"]) == String(compare[x]["id"])){
+        scale = 100;
       }
 
       switch(scale){
@@ -82,6 +85,11 @@ function findDuplicates(){
           sheet.getRange("B" + String(compare[x]["index"])).setBackground("red");
           sheet.getRange("B" + String(i + 2)).setBackground("red");
           red.push(values[i], compare[x]);
+          break;
+        case 100:
+          sheet.getRange("B" + String(compare[x]["index"])).setBackground("cyan");
+          sheet.getRange("B" + String(i + 2)).setBackground("cyan");
+          cyan.push(values[i], compare[x]);
           break;
       }
     }
@@ -109,6 +117,7 @@ function findDuplicates(){
   duplicateSheet.insertColumnsAfter(25, 36)
 
   var activeRow = 1;
+  activeRow = writeData(cyan, "cyan", duplicateSheet, sheet, activeRow);
   activeRow = writeData(green, "green", duplicateSheet, sheet, activeRow);
   activeRow = writeData(yellow, "yellow", duplicateSheet, sheet, activeRow);
   activeRow = writeData(orange, "orange", duplicateSheet, sheet, activeRow);
@@ -134,3 +143,4 @@ function writeData(data, color, sheet, dataSheet, row)
 
   return row;
 }
+
