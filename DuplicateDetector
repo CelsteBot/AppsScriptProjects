@@ -1,0 +1,130 @@
+function onOpen(e) {
+  SpreadsheetApp.getUi().createMenu('Custom Menu')
+    .addItem('Find Duplicates', 'findDuplicates')
+    .addToUi();
+}
+
+function findDuplicates(){
+  // make sure user isn't looking at the duplicate sheet
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getActiveSheet();
+
+  if (sheet.getName() == "Duplicates")
+  {
+    SpreadsheetApp.getUi().alert("Please switch to the sheet with all user entries to run this function");
+    return;
+  }
+
+  // create vars
+  var fn = sheet.getRange("B2:B").getValues();
+  var ln = sheet.getRange("D2:D").getValues();
+  var date = sheet.getRange("H2:H").getValues();
+  var number = sheet.getRange("H2:H").getValues();
+  var email = sheet.getRange("H2:H").getValues();
+
+  var values = [];
+  var compare = [];
+
+  var green = [];
+  var yellow = [];
+  var orange = [];
+  var red = [];
+
+  for (var i = 0; i < fn.length; i++)
+  {
+    values.push({"index": i + 2, "first": fn[i][0], "last": ln[i][0], "date": date[i][0], "number": number[i][0], "email": email[i][0]});
+  }
+
+  for (var i = 0; i < values.length; i++){
+    // highlight duplicates
+    for (var x = 0; x < compare.length; x++){
+      var scale = 0;
+      if (String(values[i]["first"]) == String(compare[x]["first"])){
+        scale++;
+      }
+      if (String(values[i]["last"]) == String(compare[x]["last"])){
+        scale++;
+      }
+      if (String(values[i]["date"]) == String(compare[x]["date"])){
+        scale++;
+      }
+      if (String(values[i]["number"]) == String(compare[x]["number"])){
+        scale++;
+      }
+      if (String(values[i]["email"]) == String(compare[x]["email"])){
+        scale++;
+      }
+
+      switch(scale){
+        case 2:
+          sheet.getRange("B" + String(compare[x]["index"])).setBackground("green");
+          sheet.getRange("B" + String(i + 2)).setBackground("green");
+          green.push(values[i], compare[x]);
+          break;
+        case 3:
+          sheet.getRange("B" + String(compare[x]["index"])).setBackground("yellow");
+          sheet.getRange("B" + String(i + 2)).setBackground("yellow");
+          yellow.push(values[i], compare[x]);
+          break;
+        case 4:
+          sheet.getRange("B" + String(compare[x]["index"])).setBackground("orange");
+          sheet.getRange("B" + String(i + 2)).setBackground("orange");
+          orange.push(values[i], compare[x]);
+          break;
+        case 5:
+          sheet.getRange("B" + String(compare[x]["index"])).setBackground("red");
+          sheet.getRange("B" + String(i + 2)).setBackground("red");
+          red.push(values[i], compare[x]);
+          break;
+      }
+    }
+
+    // make sure compare lists only have 10 elements in them
+    if (compare.length > 10){
+      compare.shift();
+    }
+
+    // add elements to compare lists
+    compare.push(values[i])
+  }
+
+
+  // add all flagged people to a new sheet
+  var duplicateSheet = ss.getSheetByName("Duplicates");
+
+  if (duplicateSheet != null)
+  {
+    ss.deleteSheet(duplicateSheet);
+  }
+
+  duplicateSheet = ss.insertSheet();
+  duplicateSheet.setName("Duplicates");
+  duplicateSheet.insertColumnsAfter(25, 35)
+
+  var activeRow = 1;
+  activeRow = writeData(green, "green", sheet, sheet, activeRow);
+  //activeRow = writeData(yellow, "yellow", sheet, sheet, activeRow);
+  //activeRow = writeData(orange, "orange", sheet, sheet, activeRow);
+  //activeRow = writeData(red, "red", sheet, sheet, activeRow);
+
+}
+
+function writeData(data, color, sheet, dataSheet, row)
+{
+  if (data.length == 0)
+    return row;
+
+  var changeRange = sheet.getRange(row, 1, 1, sheet.getLastColumn());
+  changeRange.setBackground(color);
+  row++;
+
+  for (var i = 0; i < data.length; i++)
+  {
+    var dataRange = sheet.getRange(data[i]["index"], 1, 1, dataSheet.getLastColumn());
+    changeRange = sheet.getRange(row, 1, 1, sheet.getLastColumn());
+    changeRange.setValues(dataRange.getValues());
+    row++;
+  }
+
+  return row;
+}
